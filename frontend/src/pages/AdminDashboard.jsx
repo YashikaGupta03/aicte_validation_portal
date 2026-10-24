@@ -1,6 +1,78 @@
-export default function AdminDashboard() {
-  return (
-<div className="r" style={{minHeight: 1100}}><div className="sb"><div className="r" style={{alignItems: 'center', gap: 10, fontWeight: 600}}><svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth={2} aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>Approval Validation Platform</div><a className="on" href="#">Overview</a><a href="#">Users and roles</a><a href="#">Checklists and rules</a><a href="#">Verification sources</a><a href="#">Audit trail</a><p className="t" style={{marginTop: 'auto'}}>Administrator</p></div><div style={{flex: 1, padding: 32}}><h1 style={{fontSize: 28}}>Administration</h1><p className="t" style={{margin: '4px 0 14px'}}>Manage access, rules and system health.</p><div className="g" style={{gridTemplateColumns: 'repeat(4,1fr)', marginBottom: 16}}><div className="c"><p className="k">Active users</p><p className="n">[86]</p></div><div className="c"><p className="k">Pending sign-ups</p><p className="n">[5]</p></div><div className="c"><p className="k">Jobs in queue</p><p className="n">[2]</p></div><div className="c"><p className="k">Sources reachable</p><p className="n">[3 of 4]</p></div></div><div className="g" style={{gridTemplateColumns: '3fr 2fr'}}><div className="c"><h2 style={{fontSize: 17, marginBottom: 6}}>Users and roles</h2><table><tbody><tr><th>NAME</th><th>ROLE</th><th>STATUS</th><th /></tr><tr><td>[Name]</td><td>College</td><td><span className="p am">Pending</span></td><td><a href="#">Approve</a></td></tr><tr><td>Officer A. Rao</td><td>AICTE officer</td><td><span className="p gr">Active</span></td><td><a href="#">Edit</a></td></tr><tr><td>[Name]</td><td>Administrator</td><td><span className="p gr">Active</span></td><td><a href="#">Edit</a></td></tr></tbody></table></div><div className="c"><h2 style={{fontSize: 17, marginBottom: 10}}>System health</h2><p className="t">AI service <span className="p gr">Running</span></p><p className="t" style={{marginTop: 10}}>Job queue <span className="p gr">Running</span></p><p className="t" style={{marginTop: 10}}>NAAC mock source <span className="p gr">Reachable</span></p><p className="t" style={{marginTop: 10}}>NBA mock source <span className="p bl">Unavailable</span></p></div></div><div className="c" style={{marginTop: 16}}><h2 style={{fontSize: 17, marginBottom: 6}}>Checklist: Extension of Approval</h2><table><tbody><tr><th>DOCUMENT</th><th>REQUIRED</th><th>RULE</th></tr><tr><td>Fire safety certificate</td><td>Yes</td><td>Valid on submission date</td></tr><tr><td>Accreditation certificate</td><td>Where applicable</td><td>NAAC or NBA</td></tr><tr><td>TER payment receipt</td><td>Yes</td><td>Latest receipt</td></tr></tbody></table></div><div className="c" style={{marginTop: 16}}><h2 style={{fontSize: 17, marginBottom: 6}}>Audit trail (append-only)</h2><p className="t">[time] · [user] · Rule applied · Record checked · Action taken</p></div></div></div>
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api, setToken } from '../api.js';
 
+export default function AdminDashboard() {
+  const [overview, setOverview] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [sources, setSources] = useState([]);
+  const [audit, setAudit] = useState([]);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const refresh = useCallback(async () => {
+    const [overviewData, userData, sourceData, auditData] = await Promise.all([
+      api('/api/admin/overview'),
+      api('/api/admin/users'),
+      api('/api/admin/sources'),
+      api('/api/admin/audit?limit=20'),
+    ]);
+    setOverview(overviewData);
+    setUsers(userData);
+    setSources(sourceData);
+    setAudit(auditData.items);
+  }, []);
+
+  useEffect(() => { refresh().catch((err) => setError(err.message)); }, [refresh]);
+
+  async function approve(id) {
+    try {
+      await api(`/api/admin/users/${id}/approve`, { method: 'POST', body: {} });
+      await refresh();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function toggleSource(source) {
+    try {
+      await api(`/api/admin/sources/${source.key}`, { method: 'PATCH', body: { available: !source.available } });
+      await refresh();
+    } catch (err) { setError(err.message); }
+  }
+
+  return (
+    <main style={{ padding: 32 }}>
+      <header className="r" style={{ justifyContent: 'space-between' }}>
+        <div><h1>Administration</h1><p className="t">Live account, service and audit information.</p></div>
+        <button className="btn bo" onClick={() => { setToken(null); navigate('/'); }}>Sign out</button>
+      </header>
+      {error && <p role="alert" className="wn">{error}</p>}
+      {!overview && !error && <p>Loading administration data…</p>}
+      {overview && <>
+        <section className="g" style={{ gridTemplateColumns: 'repeat(4, 1fr)', margin: '16px 0' }}>
+          <article className="c">Active users <b>{overview.activeUsers}</b></article>
+          <article className="c">Pending sign-ups <b>{overview.pendingSignups}</b></article>
+          <article className="c">Jobs in queue <b>{overview.jobsInQueue}</b></article>
+          <article className="c">Sources reachable <b>{overview.sourcesReachable.reachable}/{overview.sourcesReachable.total}</b></article>
+        </section>
+        <section className="c">
+          <h2>Users</h2>
+          <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Email</th><th>Institution</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>{users.map((user) => <tr key={user.id}><td>{user.name}</td><td>{user.email}</td><td>{user.institution}</td><td>{user.role}</td><td>{user.status}</td><td>{user.status === 'pending' && <button className="btn" onClick={() => approve(user.id)}>Approve</button>}</td></tr>)}</tbody>
+          </table></div>
+        </section>
+        <section className="c" style={{ marginTop: 16 }}>
+          <h2>Services and verification sources</h2>
+          <p>AI service: {overview.health.aiService} · Job queue: {overview.health.jobQueue}</p>
+          {sources.map((source) => <p key={source.key} className="r" style={{ justifyContent: 'space-between' }}>
+            <span>{source.name}: {source.available ? 'Enabled' : 'Disabled'} ({source.records} records)</span>
+            <button className="btn bo" onClick={() => toggleSource(source)}>{source.available ? 'Disable' : 'Enable'}</button>
+          </p>)}
+        </section>
+        <section className="c" style={{ marginTop: 16 }}>
+          <h2>Recent audit events</h2>
+          {audit.map((entry) => <p key={entry._id}>{new Date(entry.createdAt).toLocaleString()} · {entry.action} · {entry.entityType}</p>)}
+        </section>
+      </>}
+    </main>
   );
 }

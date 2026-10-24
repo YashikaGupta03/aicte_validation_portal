@@ -1,6 +1,105 @@
-export default function OfficerDashboard() {
-  return (
-<div className="r" style={{minHeight: 1100}}><div className="sb"><div className="r" style={{alignItems: 'center', gap: 10, fontWeight: 600}}><svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth={2} aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>Approval Validation Platform</div><a className="on" href="#">Review queue</a><a href="#">Application report</a><a href="#">Verification</a><a href="#">Audit trail</a><p className="t" style={{marginTop: 'auto'}}>Officer A. Rao · Scrutiny officer</p></div><div style={{flex: 1, padding: 32}}><div className="r" style={{justifyContent: 'space-between'}}><h1 style={{fontSize: 28}}>Review queue</h1><span className="p sl">Prototype · sample data</span></div><p className="t" style={{margin: '4px 0 16px'}}>Applications land here once the automated checks finish. Open one to review every flag with its evidence.</p><div className="ib">AI results are decision support only. Scrutiny, inspection and the final decision stay with AICTE officers.</div><div className="g" style={{gridTemplateColumns: 'repeat(4,1fr)', margin: '16px 0'}}><div className="c"><p className="k">Ready for your review</p><p className="n">3</p><p className="t">Checks finished, waiting for an officer</p></div><div className="c"><p className="k">In progress</p><p className="n">2</p><p className="t">1 AI checks running · 1 under review</p></div><div className="c"><p className="k">Open high-severity flags</p><p className="n">3</p><p className="t">Across 2 applications</p></div><div className="c"><p className="k">Verifications to follow up</p><p className="n">3</p><p className="t">1 pending · 1 source unavailable · 1 manual review</p></div></div><div className="c" style={{padding: 0}}><div className="r" style={{justifyContent: 'space-between', alignItems: 'center', padding: '0 12px', borderBottom: '1px solid #e2e8f0'}}><div className="r"><span className="tab on">All 7</span><span className="tab">Needs review 3</span><span className="tab">In progress 2</span><span className="tab">Decided 2</span></div><input className="in" style={{width: 260}} placeholder="Search college or application ID" aria-label="Search" /></div><table><tbody><tr><th>APPLICATION</th><th>CATEGORY</th><th>SUBMITTED</th><th>STAGE</th><th>FLAGS</th><th>VERIFICATION</th></tr><tr><td><span className="mo t">APP-2026-00412</span><br /><b>Greenfield Institute of Technology</b></td><td>Extension of Approval</td><td>23 Oct 2026</td><td><span className="p bl">Ready for review</span></td><td><span className="p rd">2 high</span> <span className="p am">4 med</span> <span className="p sl">1 low</span></td><td><span className="p rd">Mismatch</span></td></tr><tr><td><span className="mo t">APP-2026-00419</span><br /><b>Riverside Polytechnic</b></td><td>Extension of Approval</td><td>23 Oct 2026</td><td><span className="p bl">AI checks running (3 of 5)</span></td><td>Not ready yet</td><td><span className="p sl">Pending</span></td></tr><tr><td><span className="mo t">APP-2026-00408</span><br /><b>Lakeview College of Engineering</b></td><td>Extension of Approval</td><td>22 Oct 2026</td><td><span className="p bl">Ready for review</span></td><td><span className="p rd">1 high</span> <span className="p am">2 med</span></td><td><span className="p bl">Source unavailable</span></td></tr><tr><td><span className="mo t">APP-2026-00403</span><br /><b>Northgate Institute of Management</b></td><td>Extension of Approval</td><td>22 Oct 2026</td><td><span className="p bl">Ready for review</span></td><td><span className="p am">3 med</span> <span className="p sl">2 low</span></td><td><span className="p gr">Verified</span></td></tr><tr><td><span className="mo t">APP-2026-00397</span><br /><b>Sunrise Technical Campus</b></td><td>Extension of Approval</td><td>21 Oct 2026</td><td><span className="p bl">Under review</span></td><td><span className="p am">1 med</span> <span className="p sl">1 low</span></td><td><span className="p bl">Manual review</span></td></tr><tr><td><span className="mo t">APP-2026-00391</span><br /><b>Hillcrest College of Pharmacy</b></td><td>Extension of Approval</td><td>20 Oct 2026</td><td><span className="p gr">Approved</span></td><td><span className="p sl">2 low</span></td><td><span className="p gr">Verified</span></td></tr><tr><td><span className="mo t">APP-2026-00377</span><br /><b>Meridian Engineering College</b></td><td>Extension of Approval</td><td>18 Oct 2026</td><td><span className="p am">More information requested</span></td><td><span className="p rd">2 high</span> <span className="p am">1 med</span></td><td><span className="p am">Expired</span></td></tr></tbody></table></div><div className="g" style={{gridTemplateColumns: '1fr 1fr', marginTop: 16}}><div className="c"><h2 style={{fontSize: 17}}>Open flags by severity</h2><p className="t">Applications not yet decided</p><div className="row"><b>High</b><div className="bar"><i style={{width: '30%', '--c': '#b91c1c'}} /></div><span>3</span></div><div className="row"><b>Medium</b><div className="bar"><i style={{width: '100%', '--c': '#b45309'}} /></div><span>10</span></div><div className="row"><b>Low</b><div className="bar"><i style={{width: '40%', '--c': '#1d4ed8'}} /></div><span>4</span></div></div><div className="c"><h2 style={{fontSize: 17}}>Verification status by application</h2><p className="t">Most urgent status per application</p><div className="row"><b>Verified</b><div className="bar"><i style={{width: '100%', '--c': '#15803d'}} /></div><span>2</span></div><div className="row"><b>Mismatch</b><div className="bar"><i style={{width: '50%', '--c': '#b91c1c'}} /></div><span>1</span></div><div className="row"><b>Expired</b><div className="bar"><i style={{width: '50%', '--c': '#b45309'}} /></div><span>1</span></div><div className="row"><b>Pending</b><div className="bar"><i style={{width: '50%', '--c': '#64748b'}} /></div><span>1</span></div><div className="row"><b>Source unavailable</b><div className="bar"><i style={{width: '50%', '--c': '#1d4ed8'}} /></div><span>1</span></div><div className="row"><b>Manual review</b><div className="bar"><i style={{width: '50%', '--c': '#6d28d9'}} /></div><span>1</span></div></div></div></div></div>
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api, setToken } from '../api.js';
 
+export default function OfficerDashboard() {
+  const [stage, setStage] = useState('all');
+  const [queue, setQueue] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+
+  const refresh = useCallback(async () => {
+    const [queueData, statsData] = await Promise.all([
+      api(`/api/officer/queue${stage === 'all' ? '' : `?stage=${stage}`}`),
+      api('/api/officer/stats'),
+    ]);
+    setQueue(queueData);
+    setStats(statsData);
+  }, [stage]);
+
+  useEffect(() => { refresh().catch((err) => setError(err.message)); }, [refresh]);
+
+  async function openReport(id) {
+    setError('');
+    try { setReport(await api(`/api/officer/applications/${id}/report`)); }
+    catch (err) { setError(err.message); }
+  }
+
+  async function act(path, body) {
+    setBusy(true);
+    setError('');
+    try {
+      await api(path, { method: path.includes('/flags/') ? 'PATCH' : 'POST', body });
+      if (report) await openReport(report.application.id);
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  async function decide(event) {
+    event.preventDefault();
+    const fields = new FormData(event.currentTarget);
+    await act(`/api/officer/applications/${report.application.id}/decision`, {
+      outcome: fields.get('outcome'), reason: fields.get('reason'),
+    });
+  }
+
+  return (
+    <main style={{ padding: 32 }}>
+      <header className="r" style={{ justifyContent: 'space-between' }}>
+        <h1>Officer review queue</h1>
+        <button className="btn bo" onClick={() => { setToken(null); navigate('/'); }}>Sign out</button>
+      </header>
+      {error && <p role="alert" className="wn">{error}</p>}
+      {stats && <section className="g" style={{ gridTemplateColumns: 'repeat(3, 1fr)', margin: '16px 0' }}>
+        <article className="c">Ready for review: <b>{stats.readyForReview}</b></article>
+        <article className="c">In progress: <b>{stats.inProgress.total}</b></article>
+        <article className="c">Open high-severity flags: <b>{stats.openHighFlags.count}</b></article>
+      </section>}
+      <section className="c">
+        <div className="r" style={{ gap: 8, marginBottom: 12 }}>
+          {[['all', 'All'], ['needs_review', 'Needs review'], ['in_progress', 'In progress'], ['decided', 'Decided']].map(([key, label]) =>
+            <button key={key} className="btn bo" onClick={() => setStage(key)}>{label} {queue?.tabs?.[key] ?? ''}</button>)}
+        </div>
+        {!queue && !error && <p>Loading queue…</p>}
+        {queue && <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Application</th><th>Institution</th><th>Status</th><th>Flags</th><th /></tr></thead>
+          <tbody>{queue.rows.map((row) => <tr key={row.id}><td>{row.code || row.id}</td><td>{row.institution}</td><td>{row.stageLabel}</td><td>{row.flags.high} high, {row.flags.medium} medium, {row.flags.low} low</td><td><button className="btn bo" onClick={() => openReport(row.id)}>Open report</button></td></tr>)}</tbody>
+        </table></div>}
+      </section>
+      {report && <section className="c" style={{ marginTop: 20 }}>
+        <div className="r" style={{ justifyContent: 'space-between' }}>
+          <div><h2>{report.application.code} — {report.application.form.institutionName}</h2><p>{report.application.stageLabel} · {report.application.category}</p></div>
+          <button className="btn bo" onClick={() => setReport(null)}>Close</button>
+        </div>
+        <h3>Documents</h3>
+        {report.documents.map((doc) => <p key={doc.id}>{doc.filename} ({doc.kind}: {doc.key})</p>)}
+        <h3>Flags</h3>
+        {report.flags.length === 0 && <p>No flags for this analysis.</p>}
+        {report.flags.map((flag) => <div key={flag._id} style={{ borderTop: '1px solid #e2e8f0', padding: 12 }}>
+          <b>{flag.severity.toUpperCase()} · {flag.type}</b> — {flag.reason}
+          <p>Status: {flag.review.status}{flag.review.note ? ` — ${flag.review.note}` : ''}</p>
+          {flag.review.status === 'open' && <div className="r" style={{ gap: 8 }}>
+            {['acknowledged', 'resolved', 'dismissed'].map((status) => <button key={status} disabled={busy} className="btn bo" onClick={() => {
+              const note = status === 'dismissed' ? window.prompt('Reason for dismissing this flag (required):') : '';
+              if (status !== 'dismissed' || note?.trim()) act(`/api/officer/flags/${flag._id}`, { status, note });
+            }}>{status}</button>)}
+          </div>}
+        </div>)}
+        {['ready_for_review', 'under_review'].includes(report.application.status) && <>
+          {report.application.status === 'ready_for_review' && <button disabled={busy} className="btn" onClick={() => act(`/api/officer/applications/${report.application.id}/start-review`, {})}>Start review</button>}
+          <form onSubmit={decide} style={{ marginTop: 16 }}>
+            <label className="t">Decision
+              <select className="in" name="outcome"><option value="approve">Approve</option><option value="reject">Reject</option><option value="request_info">Request more information</option></select>
+            </label>
+            <label className="t">Reason (at least 10 characters)<textarea required minLength={10} className="in" name="reason" /></label>
+            <button disabled={busy || !report.allFlagsReviewed} className="btn" type="submit">Record decision</button>
+            {!report.allFlagsReviewed && <p className="t">Review every flag before recording a decision.</p>}
+          </form>
+        </>}
+      </section>}
+    </main>
   );
 }

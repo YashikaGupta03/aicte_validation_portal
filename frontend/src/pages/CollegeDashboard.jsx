@@ -1,6 +1,41 @@
-export default function CollegeDashboard() {
-  return (
-<div><div className="r dk" style={{justifyContent: 'space-between', alignItems: 'center', padding: '16px 48px', background: '#0f1a2e', color: '#fff'}}><div className="r" style={{alignItems: 'center', gap: 10, fontWeight: 600}}><svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth={2} aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>Approval Validation Platform</div><div className="r" style={{gap: 24, color: '#cbd5e1', fontSize: 14}}><b style={{color: '#fff'}}>Dashboard</b><span>New application</span><span>My applications</span><span>Greenfield Institute of Technology</span></div></div><div style={{padding: '32px 48px'}}><div className="r" style={{justifyContent: 'space-between', alignItems: 'center'}}><div><h1 style={{fontSize: 28}}>Welcome, Greenfield Institute</h1><p className="t">Track your applications and finish any missing documents.</p></div><a className="btn" href="#/new-application">New application</a></div><div className="ib" style={{marginTop: 16}}>Your applications are checked automatically after you submit. An AICTE officer makes every final decision.</div><div className="g" style={{gridTemplateColumns: 'repeat(4,1fr)', margin: '24px 0'}}><div className="c"><p className="k">Drafts</p><p className="n">1</p></div><div className="c"><p className="k">In validation</p><p className="n">1</p></div><div className="c"><p className="k">Info requested</p><p className="n">1</p></div><div className="c"><p className="k">Approved</p><p className="n">2</p></div></div><div className="g" style={{gridTemplateColumns: '2fr 1fr'}}><div className="c"><h2 style={{fontSize: 17, marginBottom: 8}}>My applications</h2><table><tbody><tr><th>APPLICATION</th><th>CATEGORY</th><th>SUBMITTED</th><th>STATUS</th></tr><tr><td><b className="mo">APP-2026-00412</b></td><td>Extension of Approval</td><td>23 Oct 2026</td><td><span className="p bl">AI checks running (3 of 5)</span></td></tr><tr><td><b className="mo">APP-2026-00377</b></td><td>Extension of Approval</td><td>18 Oct 2026</td><td><span className="p am">More information requested</span></td></tr><tr><td><b className="mo">APP-2026-00391</b></td><td>Extension of Approval</td><td>20 Oct 2026</td><td><span className="p gr">Approved</span></td></tr><tr><td><b>Draft</b></td><td>Extension of Approval</td><td>Saved 20:12</td><td><span className="p sl">Draft</span></td></tr></tbody></table></div><div className="g"><div className="c"><h2 style={{fontSize: 17}}>Checklist progress</h2><p className="t" style={{margin: '6px 0'}}>5 of 7 required documents uploaded</p><div className="bar"><i style={{width: '71%'}} /></div><p className="t" style={{marginTop: 10}}>Missing: Land ownership record, Structural safety certificate</p></div><div className="c"><h2 style={{fontSize: 17}}>Notifications</h2><p className="t" style={{marginTop: 8}}>Officer requested a clearer fire certificate for APP-2026-00377.</p></div></div></div></div></div>
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, setToken } from '../api.js';
 
+export default function CollegeDashboard() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  useEffect(() => {
+    api('/api/applications/dashboard').then(setData).catch((err) => setError(err.message));
+  }, []);
+
+  return (
+    <main style={{ padding: 32 }}>
+      <header className="r" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>College dashboard</h1>
+        <div className="r" style={{ gap: 12 }}>
+          <Link className="btn" to="/new-application">New application</Link>
+          <button className="btn bo" onClick={() => { setToken(null); navigate('/'); }}>Sign out</button>
+        </div>
+      </header>
+      {error && <p role="alert" className="wn">{error}</p>}
+      {!data && !error && <p className="t">Loading applications…</p>}
+      {data && <>
+        <section className="g" style={{ gridTemplateColumns: 'repeat(4, 1fr)', margin: '24px 0' }}>
+          {Object.entries({ Drafts: data.stats.drafts, 'In validation': data.stats.inValidation, 'More information requested': data.stats.infoRequested, Approved: data.stats.approved }).map(([label, value]) =>
+            <article className="c" key={label}><p className="k">{label}</p><p className="n">{value}</p></article>)}
+        </section>
+        <section className="c">
+          <h2>My applications</h2>
+          {data.applications.length === 0 ? <p className="t">No applications yet. Start by creating a draft.</p> :
+            <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Application</th><th>Category</th><th>Status</th><th>Updated</th></tr></thead>
+              <tbody>{data.applications.map((app) => <tr key={app.id}><td>{app.code || 'Draft'}</td><td>{app.category}</td><td>{app.statusLabel}</td><td>{app.savedAt ? new Date(app.savedAt).toLocaleString() : '—'}</td></tr>)}</tbody>
+            </table></div>}
+        </section>
+        {data.checklistProgress && <p className="t">Current checklist: {data.checklistProgress.requiredUploaded} of {data.checklistProgress.requiredTotal} required documents uploaded ({data.checklistProgress.percent}%).</p>}
+        {data.notifications?.length > 0 && <section className="c"><h2>Notifications</h2>{data.notifications.map((item) => <p key={item._id}><b>{item.title}</b> — {item.body}</p>)}</section>}
+      </>}
+    </main>
   );
 }

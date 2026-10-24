@@ -1,14 +1,20 @@
-# AICTE Approval Validation Platform: frontend (prototype UI)
+# AICTE Approval Validation Platform: frontend
 
-React + Vite. Static screens with sample data, converted from the design canvas.
+React + Vite frontend for the AICTE validation portal. Authentication and the college, officer,
+and administrator workflows communicate with the Node/Express API.
 
 ## Run
     npm install
     npm run dev       # http://localhost:5173
     npm run build
 
+For local development, the Vite dev server proxies `/api` requests to `http://localhost:4000`.
+For a separately hosted frontend, set `VITE_API_URL` to the backend's public origin before building
+(see `.env.example`). The backend must allow the frontend origin in `CORS_ORIGIN`.
+
 ## Roles
-On `#/signup` pick College, AICTE officer or Administrator; the button then lands on that role's dashboard.
+Use `#/signup` to sign in or create an account. College accounts may be activated automatically
+depending on backend configuration. Officer and administrator accounts require administrator approval.
 
 ## Routes (hash routing)
 - `#/`                  Landing page
@@ -21,6 +27,5 @@ On `#/signup` pick College, AICTE officer or Administrator; the button then land
 
 ## Notes
 - Styles live in `src/index.css` (plain CSS classes). Move to Tailwind or components as you grow.
-- Figures, names and quotes are placeholder sample data. Connect to your Node/Express API next.
-- Suggested next steps: split repeated markup (stat cards, tables, pills) into components,
-  add Recharts for the dashboard charts, add JWT login with role-based redirects.
+- The college dashboard and application form, officer queue/review, and admin overview/users/sources/audit
+  are API-backed. Landing-page marketing content remains illustrative.
