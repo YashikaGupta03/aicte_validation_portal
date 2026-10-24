@@ -1,0 +1,44 @@
+# Backend stack: MongoDB (+GridFS), Redis, Node API, BullMQ worker, Python AI service.
+# Copy .env.example to .env first. The React frontend (Vite, port 5173) runs separately with `npm run dev`.
+services:
+  mongo:
+    image: mongo:7
+    volumes: [mongo_data:/data/db]
+    healthcheck: { test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1})"], interval: 10s, retries: 5 }
+
+  redis:
+    image: redis:7-alpine
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 10s, retries: 5 }
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/aicte_validation
+      REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: http://ai-service:8000
+      PUBLIC_API_URL: http://api:4000     # how the AI service reaches the API inside the compose network
+      RUN_WORKER_IN_API: "false"
+    ports: ["4000:4000"]
+    depends_on: { mongo: { condition: service_healthy }, redis: { condition: service_healthy } }
+
+  worker:
+    build: ./backend
+    command: ["node", "src/workers/analysisWorker.js"]
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/aicte_validation
+      REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: http://ai-service:8000
+      PUBLIC_API_URL: http://api:4000
+    depends_on: { mongo: { condition: service_healthy }, redis: { condition: service_healthy } }
+
+  ai-service:
+    build: ./ai-service
+    env_file: .env
+    environment:
+      NODE_API_URL: http://api:4000
+    # not published to the host: only the worker needs to reach it
+
+volumes:
+  mongo_data:
