@@ -13,8 +13,9 @@ For a separately hosted frontend, set `VITE_API_URL` to the backend's public ori
 (see `.env.example`). The backend must allow the frontend origin in `CORS_ORIGIN`.
 
 ## Roles
-Use `#/signup` to sign in or create an account. College accounts may be activated automatically
-depending on backend configuration. Officer and administrator accounts require administrator approval.
+Use `#/signup` to sign in or create an account. The Student sign-in option uses the backend's
+`college` role and college dashboard. College accounts may be activated automatically depending on
+backend configuration. Officer and administrator accounts require administrator approval.
 
 ## Routes (hash routing)
 - `#/`                  Landing page
