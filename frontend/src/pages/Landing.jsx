@@ -1,4 +1,46 @@
+import { useEffect } from "react";
+
 export default function Landing() {
+  useEffect(() => {
+    const headings = Array.from(document.querySelectorAll(".h2"));
+    const platformSection = headings[0]?.parentElement;
+    const targets = new Map([
+      ["Platform", platformSection],
+      ["Workflow", platformSection?.querySelector(".g")],
+      ["Validation", headings[1]?.parentElement],
+      ["Insights", headings[2]?.parentElement],
+      ["Council", headings[3]?.parentElement],
+    ]);
+    const navigationLinks = document.querySelectorAll(".nv a");
+    const listeners = [];
+
+    navigationLinks.forEach((link) => {
+      const section = targets.get(link.textContent.trim());
+      if (!section) return;
+
+      section.id = link.textContent.trim().toLowerCase();
+      link.href = `#${section.id}`;
+      const handleClick = (event) => {
+        event.preventDefault();
+        section.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      };
+
+      link.addEventListener("click", handleClick);
+      listeners.push([link, handleClick]);
+    });
+
+    return () => {
+      listeners.forEach(([link, handleClick]) => {
+        link.removeEventListener("click", handleClick);
+      });
+    };
+  }, []);
+
   return (
 <div style={{width: '100%', maxWidth: 1280, margin: '0 auto'}}><div className="hero"><div className="r nv" style={{justifyContent: 'space-between', alignItems: 'center', padding: '18px 48px'}}><div className="r" style={{alignItems: 'center', gap: 10, fontWeight: 600}}><span style={{width: 34, height: 34, borderRadius: 9, background: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg></span><span>AICTE<br /><span className="eb" style={{color: '#93c5fd', fontWeight: 400}}>Validation</span></span></div><div className="r" style={{gap: 34}}><a href="#">Platform</a><a href="#">Workflow</a><a href="#">Validation</a><a href="#">Insights</a><a href="#">Council</a></div><div className="r" style={{gap: 10}}><a className="btn bo" href="#/signup" style={{background: 'transparent', color: '#fff', borderColor: '#475d8a', padding: '9px 16px'}}>Sign in</a><a className="btn" href="#/signup" style={{padding: '9px 16px'}}>Validate a project</a></div></div>
     <div className="r" style={{padding: '48px 48px 72px', gap: 40, alignItems: 'center'}}><div style={{flex: 1}}><span className="p" style={{border: '1px solid #475d8a', color: '#cbd5e1', display: 'inline-block'}}>SIH · Problem Statement 26261</span><h1 style={{fontSize: 66, lineHeight: '1.05', margin: '22px 0', fontWeight: 600}}>Verified work,<br /><span className="ac">recognized</span><br />instantly.</h1><p style={{color: '#cbd5e1', fontSize: 16, lineHeight: '1.7', maxWidth: 460}}>An AI-powered validation platform that authenticates academic projects in real time — checking originality, completeness, and compliance so institutions can certify student work with confidence.</p><div className="r" style={{gap: 12, margin: '28px 0'}}><a className="btn" href="#/signup">Start validation →</a><a className="btn bo" href="#" style={{background: 'transparent', color: '#fff', borderColor: '#475d8a'}}>See how it works</a></div><p style={{color: '#cbd5e1', fontSize: 13}}>✓ AICTE-aligned &nbsp;|&nbsp; ✓ AI-verified &nbsp;|&nbsp; ✓ Tamper-proof</p></div>
