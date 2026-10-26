@@ -26,18 +26,9 @@ router.post('/signup', limiter, validate(signupSchema), async (req, res) => {
   // Only college accounts can be auto-approved. Officer and admin accounts always wait for an administrator.
   const status = rest.role === 'college' && config.autoApproveColleges ? 'active' : 'pending';
   const user = await User.create({ ...rest, passwordHash: await bcrypt.hash(password, 12), status });
-  await audit({
-    actor: actorOf(user),
-    action: rest.role === 'officer' ? 'officer.verification_requested' : 'user.signup',
-    entityType: 'user',
-    entityId: user._id,
-    details: { role: user.role, status },
-  });
+  await audit({ actor: actorOf(user), action: 'user.signup', entityType: 'user', entityId: user._id, details: { role: user.role, status } });
   if (status === 'active') return res.status(201).json({ token: signToken(user), user: user.toPublic() });
-  const message = rest.role === 'officer'
-    ? 'Officer verification request sent to the administrator. You can sign in after your request is approved.'
-    : 'Account created. An administrator must approve it before you can sign in.';
-  res.status(202).json({ message, user: user.toPublic() });
+  res.status(202).json({ message: 'Account created. An administrator must approve it before you can sign in.', user: user.toPublic() });
 });
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
@@ -51,7 +42,6 @@ router.post('/login', limiter, validate(loginSchema), async (req, res) => {
     throw unauthorized('Incorrect email or password');
   }
   if (user.status === 'pending') throw forbidden('Your account is waiting for administrator approval');
-  if (user.status === 'rejected') throw forbidden('Your account verification request was not approved. Contact an administrator for more information.');
   if (user.status !== 'active') throw forbidden('This account is disabled');
   user.lastLoginAt = new Date();
   await user.save();

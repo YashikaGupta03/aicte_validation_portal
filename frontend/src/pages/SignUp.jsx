@@ -34,9 +34,7 @@ export default function SignUp() {
         : await api('/api/auth/signup', { method: 'POST', body: { ...form, role } });
 
       if (!result.token) {
-        setMessage(result.message || (role === 'officer'
-          ? 'Officer verification request sent to the administrator. You can sign in after your request is approved.'
-          : 'Your account was created and is waiting for administrator approval.'));
+        setMessage(result.message || 'Your account was created and is waiting for administrator approval.');
         setMode('login');
         return;
       }
@@ -115,13 +113,7 @@ export default function SignUp() {
             <input required minLength={mode === 'signup' ? 10 : 1} type="password" id="password" name="password" className="in auth-input" value={form.password} onChange={update} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Enter your password" />
 
             <button disabled={busy} type="submit" className="btn auth-submit">
-              {busy
-                ? 'Please wait…'
-                : mode === 'login'
-                  ? `Sign in as ${selectedRole?.label}`
-                  : role === 'officer'
-                    ? 'Send verification request'
-                    : 'Create account'}
+              {busy ? 'Please wait…' : mode === 'login' ? `Sign in as ${selectedRole?.label}` : 'Create account'}
             </button>
           </form>
 

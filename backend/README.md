@@ -49,13 +49,13 @@ Demo logins after seeding: `admin@demo.local / Admin@12345`, `officer@demo.local
 | New application | `POST /api/applications`, `PATCH /api/applications/:id`, `PUT /api/applications/:id/documents/:key`, `PUT .../infrastructure/:key`, `GET /api/applications/:id`, `POST .../submit` |
 | Officer dashboard | `GET /api/officer/queue?stage=needs_review\|in_progress\|decided`, `GET /api/officer/stats` |
 | Application report | `GET /api/officer/applications/:id/report`, `GET /api/documents/:id/file` |
-| Admin | `GET /api/admin/overview`, `/users`, `/officer-verification-requests`, `POST /officer-verification-requests/:id/approve\|reject`, `/users/:id/approve`, `/checklists/:category`, `/sources`, `/audit`, `/audit/verify` |
+| Admin | `GET /api/admin/overview`, `/users`, `/users/:id/approve`, `/checklists/:category`, `/sources`, `/audit`, `/audit/verify` |
 
 Frontend note: the existing screens are static. Add a small `api.js` that stores the JWT, sends `Authorization: Bearer <token>`,
 and set a Vite proxy (`server.proxy: {"/api": "http://localhost:4000"}`) or `CORS_ORIGIN`.
 
 ## Safeguards built in
-- JWT + role checks on every route; accounts are re-read per request so disabling a user takes effect immediately. Officer sign-ups create pending verification requests, never active accounts; administrators approve or reject them from the officer verification queue. Decisions are recorded in the audit trail and the applicant is notified. Administrator sign-ups also wait for approval.
+- JWT + role checks on every route; accounts are re-read per request so disabling a user takes effect immediately. Officer/admin sign-ups always wait for admin approval.
 - Append-only, hash-chained audit log (`GET /api/admin/audit/verify` detects edits or deletions). Logged: uploads, submission with rules applied, every verification (source, time, outcome), file views by staff, flag reviews, decisions, admin changes.
 - `/internal/*` and `/mock-authority/*` need the shared `SERVICE_TOKEN`; do not expose them through a public proxy. The production start refuses default secrets.
 - The AI service never fetches URLs found in QR codes. QR content is used only as a reference number.
