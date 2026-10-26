@@ -37,13 +37,48 @@ router.get('/overview', async (_req, res) => {
 
 // ---- users ---------------------------------------------------------------------------------------------
 router.get('/users', async (req, res) => {
-  const filter = req.query.status ? { status: String(req.query.status) } : {};
+  const filter = req.query.status
+    ? { status: String(req.query.status), ...(req.query.status === 'pending' ? { role: { $ne: 'officer' } } : {}) }
+    : { $or: [{ status: { $ne: 'pending' } }, { role: { $ne: 'officer' } }] };
   const users = await User.find(filter).sort({ status: 1, createdAt: -1 }).limit(500);
   res.json(users.map((u) => u.toPublic()));
 });
 
+router.get('/officer-verification-requests', async (_req, res) => {
+  const requests = await User.find({ role: 'officer', status: 'pending' }).sort({ createdAt: 1 }).limit(500);
+  res.json(requests.map((user) => user.toPublic()));
+});
+
+router.post('/officer-verification-requests/:id/approve', async (req, res) => {
+  const user = await User.findOneAndUpdate(
+    { _id: req.params.id, role: 'officer', status: 'pending' },
+    { status: 'active' },
+    { new: true }
+  );
+  if (!user) throw conflict('Officer verification request not found or already reviewed');
+  await audit({ actor: actorOf(req.user), action: 'officer.verification_approved', entityType: 'user', entityId: user._id });
+  await notifyUser(user._id, { title: 'AICTE officer account approved', body: 'Your officer verification request was approved. You can now sign in to the Approval Validation Platform.' });
+  res.json(user.toPublic());
+});
+
+router.post('/officer-verification-requests/:id/reject', async (req, res) => {
+  const user = await User.findOneAndUpdate(
+    { _id: req.params.id, role: 'officer', status: 'pending' },
+    { status: 'rejected' },
+    { new: true }
+  );
+  if (!user) throw conflict('Officer verification request not found or already reviewed');
+  await audit({ actor: actorOf(req.user), action: 'officer.verification_rejected', entityType: 'user', entityId: user._id });
+  await notifyUser(user._id, { title: 'AICTE officer account not approved', body: 'Your officer verification request was not approved. Contact an administrator for more information.' });
+  res.json(user.toPublic());
+});
+
 router.post('/users/:id/approve', async (req, res) => {
-  const user = await User.findOneAndUpdate({ _id: req.params.id, status: 'pending' }, { status: 'active' }, { new: true });
+  const user = await User.findOneAndUpdate(
+    { _id: req.params.id, role: { $ne: 'officer' }, status: 'pending' },
+    { status: 'active' },
+    { new: true }
+  );
   if (!user) throw conflict('User not found or not pending');
   await audit({ actor: actorOf(req.user), action: 'user.approved', entityType: 'user', entityId: user._id, details: { role: user.role } });
   await notifyUser(user._id, { title: 'Your account is approved', body: 'You can now sign in to the Approval Validation Platform.' });

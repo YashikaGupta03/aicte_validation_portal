@@ -16,6 +16,9 @@ For a separately hosted frontend, set `VITE_API_URL` to the backend's public ori
 Use `#/signup` to sign in or create an account. The Student sign-in option uses the backend's
 `college` role and college dashboard. College accounts may be activated automatically depending on
 backend configuration. Officer and administrator accounts require administrator approval.
+Officer signups are submitted as verification requests and remain unable to sign in until an
+administrator approves them in the officer verification queue. Rejected requests are recorded and
+cannot be used to sign in.
 
 ## Routes (hash routing)
 - `#/`                  Landing page

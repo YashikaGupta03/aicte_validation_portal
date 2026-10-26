@@ -5,20 +5,24 @@ import { api, setToken } from '../api.js';
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [users, setUsers] = useState([]);
+  const [officerRequests, setOfficerRequests] = useState([]);
   const [sources, setSources] = useState([]);
   const [audit, setAudit] = useState([]);
   const [error, setError] = useState('');
+  const [reviewingRequest, setReviewingRequest] = useState('');
   const navigate = useNavigate();
 
   const refresh = useCallback(async () => {
-    const [overviewData, userData, sourceData, auditData] = await Promise.all([
+    const [overviewData, userData, officerRequestData, sourceData, auditData] = await Promise.all([
       api('/api/admin/overview'),
       api('/api/admin/users'),
+      api('/api/admin/officer-verification-requests'),
       api('/api/admin/sources'),
       api('/api/admin/audit?limit=20'),
     ]);
     setOverview(overviewData);
     setUsers(userData);
+    setOfficerRequests(officerRequestData);
     setSources(sourceData);
     setAudit(auditData.items);
   }, []);
@@ -30,6 +34,19 @@ export default function AdminDashboard() {
       await api(`/api/admin/users/${id}/approve`, { method: 'POST', body: {} });
       await refresh();
     } catch (err) { setError(err.message); }
+  }
+
+  async function reviewOfficerRequest(id, decision) {
+    setReviewingRequest(id);
+    setError('');
+    try {
+      await api(`/api/admin/officer-verification-requests/${id}/${decision}`, { method: 'POST', body: {} });
+      await refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReviewingRequest('');
+    }
   }
 
   async function toggleSource(source) {
@@ -53,6 +70,26 @@ export default function AdminDashboard() {
           <article className="c">Pending sign-ups <b>{overview.pendingSignups}</b></article>
           <article className="c">Jobs in queue <b>{overview.jobsInQueue}</b></article>
           <article className="c">Sources reachable <b>{overview.sourcesReachable.reachable}/{overview.sourcesReachable.total}</b></article>
+        </section>
+        <section className="c" style={{ marginBottom: 16 }}>
+          <h2>AICTE officer verification requests</h2>
+          <p className="t" style={{ margin: '6px 0 14px' }}>Review each officer signup request before granting access to the officer dashboard.</p>
+          {officerRequests.length === 0
+            ? <p className="t">There are no officer verification requests waiting for review.</p>
+            : <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Email</th><th>Institution</th><th>Requested</th><th>Action</th></tr></thead>
+              <tbody>{officerRequests.map((request) => <tr key={request.id}>
+                <td>{request.name}</td>
+                <td>{request.email}</td>
+                <td>{request.institution}</td>
+                <td>{new Date(request.createdAt).toLocaleString()}</td>
+                <td>
+                  <div className="r" style={{ gap: 8 }}>
+                    <button className="btn" disabled={reviewingRequest === request.id} onClick={() => reviewOfficerRequest(request.id, 'approve')}>Approve</button>
+                    <button className="btn bo" disabled={reviewingRequest === request.id} onClick={() => reviewOfficerRequest(request.id, 'reject')}>Disapprove</button>
+                  </div>
+                </td>
+              </tr>)}</tbody>
+            </table></div>}
         </section>
         <section className="c">
           <h2>Users</h2>
