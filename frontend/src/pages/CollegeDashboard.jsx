@@ -11,10 +11,10 @@ export default function CollegeDashboard() {
   }, []);
 
   return (
-    <main style={{ padding: 32 }}>
-      <header className="r" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+    <main className="page">
+      <header className="r page-head">
         <h1>College dashboard</h1>
-        <div className="r" style={{ gap: 12 }}>
+        <div className="r row-wrap" style={{ gap: 12 }}>
           <Link className="btn" to="/new-application">New application</Link>
           <button className="btn bo" onClick={() => { setToken(null); navigate('/'); }}>Sign out</button>
         </div>
@@ -22,7 +22,7 @@ export default function CollegeDashboard() {
       {error && <p role="alert" className="wn">{error}</p>}
       {!data && !error && <p className="t">Loading applications…</p>}
       {data && <>
-        <section className="g" style={{ gridTemplateColumns: 'repeat(4, 1fr)', margin: '24px 0' }}>
+        <section className="g grid-4" style={{ margin: '24px 0' }}>
           {Object.entries({ Drafts: data.stats.drafts, 'In validation': data.stats.inValidation, 'More information requested': data.stats.infoRequested, Approved: data.stats.approved }).map(([label, value]) =>
             <article className="c" key={label}><p className="k">{label}</p><p className="n">{value}</p></article>)}
         </section>

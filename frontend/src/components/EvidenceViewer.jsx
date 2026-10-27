@@ -79,7 +79,7 @@ export default function EvidenceViewer({ doc, highlights, activeId, page, onPage
 
   return (
     <div>
-      <div className="r" style={{ gap: 12, alignItems: 'center', marginBottom: 8 }}>
+      <div className="r row-wrap" style={{ gap: 12, alignItems: 'center', marginBottom: 8 }}>
         <b>{doc.filename}</b>
         {state.pages > 1 && <>
           <button className="btn bo" disabled={page <= 1} onClick={() => onPage(page - 1)}>Prev</button>

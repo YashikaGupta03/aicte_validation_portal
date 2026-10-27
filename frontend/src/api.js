@@ -32,12 +32,18 @@ export async function api(path, { method = 'GET', body, file, ...options } = {})
     requestBody = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    method,
-    headers,
-    body: requestBody,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      method,
+      headers,
+      body: requestBody,
+      signal: options.signal || AbortSignal.timeout(20000),
+    });
+  } catch (err) {
+    throw new ApiError(err.name === 'TimeoutError' ? 'The server took too long to respond. Check that the backend, MongoDB and Redis are running.' : 'Could not reach the server. Check that the backend is running on port 4000.', 0);
+  }
   if (response.status === 204) return null;
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {

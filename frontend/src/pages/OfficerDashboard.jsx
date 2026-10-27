@@ -87,23 +87,23 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <main style={{ padding: 32 }}>
-      <header className="r" style={{ justifyContent: 'space-between' }}>
+    <main className="page">
+      <header className="r page-head">
         <h1>Officer review queue</h1>
         <button className="btn bo" onClick={() => { setToken(null); navigate('/'); }}>Sign out</button>
       </header>
       {error && <p role="alert" className="wn">{error}</p>}
-      {stats && <section className="g" style={{ gridTemplateColumns: 'repeat(3, 1fr)', margin: '16px 0' }}>
+      {stats && <section className="g grid-3" style={{ margin: '16px 0' }}>
         <article className="c">Ready for review: <b>{stats.readyForReview}</b></article>
         <article className="c">In progress: <b>{stats.inProgress.total}</b></article>
         <article className="c">Open high-severity flags: <b>{stats.openHighFlags.count}</b></article>
       </section>}
-      {stats && <section className="g" style={{ gridTemplateColumns: 'repeat(2, 1fr)', marginBottom: 16 }}>
+      {stats && <section className="g grid-2" style={{ marginBottom: 16 }}>
         <Chart title="Open flags by severity" data={Object.entries(stats.openFlagsBySeverity).map(([key, value]) => ({ key, label: label(key), value }))} />
         <Chart title="Verification status (most urgent per application)" data={Object.entries(stats.verificationByApplication).map(([key, value]) => ({ key, label: label(key), value }))} />
       </section>}
       <section className="c">
-        <div className="r" style={{ gap: 8, marginBottom: 12 }}>
+        <div className="r row-wrap" style={{ gap: 8, marginBottom: 12 }}>
           {[['all', 'All'], ['needs_review', 'Needs review'], ['in_progress', 'In progress'], ['decided', 'Decided']].map(([key, label]) =>
             <button key={key} className="btn bo" onClick={() => setStage(key)}>{label} {queue?.tabs?.[key] ?? ''}</button>)}
         </div>
@@ -113,7 +113,7 @@ export default function OfficerDashboard() {
         </table></div>}
       </section>
       {report && <section className="c" style={{ marginTop: 20 }}>
-        <div className="r" style={{ justifyContent: 'space-between' }}>
+        <div className="r page-head">
           <div><h2>{report.application.code} — {report.application.form.institutionName}</h2><p>{report.application.stageLabel} · {report.application.category}</p></div>
           <button className="btn bo" onClick={() => setReport(null)}>Close</button>
         </div>
@@ -161,7 +161,7 @@ export default function OfficerDashboard() {
             {Array.isArray(flag.evidence?.bbox) ? `Show on document (p. ${flag.evidence.page || 1})` : 'Open document'}
           </button>}
           <p>Status: {flag.review.status}{flag.review.note ? ` — ${flag.review.note}` : ''}</p>
-          {flag.review.status === 'open' && <div className="r" style={{ gap: 8 }}>
+          {flag.review.status === 'open' && <div className="r row-wrap" style={{ gap: 8 }}>
             {['acknowledged', 'resolved', 'dismissed'].map((status) => <button key={status} disabled={busy} className="btn bo" onClick={() => {
               const note = status === 'dismissed' ? window.prompt('Reason for dismissing this flag (required):') : '';
               if (status !== 'dismissed' || note?.trim()) act(`/api/officer/flags/${flag._id}`, { status, note });

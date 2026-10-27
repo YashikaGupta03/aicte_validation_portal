@@ -7,6 +7,11 @@ const roles = [
   { value: 'officer', label: 'AICTE officer', description: 'Review applications, evidence and validation results.' },
   { value: 'admin', label: 'Administrator', description: 'Manage users, checklists and platform settings.' },
 ];
+const demoAccounts = {
+  college: { email: 'college@demo.local', password: 'College@12345' },
+  officer: { email: 'officer@demo.local', password: 'Officer@12345' },
+  admin: { email: 'admin@demo.local', password: 'Admin@12345' },
+};
 const rolePaths = { college: '/college', officer: '/officer', admin: '/admin' };
 
 export default function SignUp() {
@@ -21,6 +26,12 @@ export default function SignUp() {
 
   function update(event) {
     setForm({ ...form, [event.target.name]: event.target.value });
+  }
+
+  function fillDemo() {
+    setForm((current) => ({ ...current, ...demoAccounts[role] }));
+    setError('');
+    setMessage(`Demo ${selectedRole?.label} credentials filled in. Press Sign in to continue.`);
   }
 
   async function submit(event) {
@@ -111,6 +122,12 @@ export default function SignUp() {
             <input required type="email" id="email" name="email" className="in auth-input" value={form.email} onChange={update} autoComplete="username" placeholder="name@institution.edu" />
             <label className="auth-label" htmlFor="password">Password</label>
             <input required minLength={mode === 'signup' ? 10 : 1} type="password" id="password" name="password" className="in auth-input" value={form.password} onChange={update} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Enter your password" />
+
+            {mode === 'login' && (
+              <button type="button" className="bo auth-demo" onClick={fillDemo}>
+                Use demo {selectedRole?.label} credentials
+              </button>
+            )}
 
             <button disabled={busy} type="submit" className="btn auth-submit">
               {busy ? 'Please wait…' : mode === 'login' ? `Sign in as ${selectedRole?.label}` : 'Create account'}

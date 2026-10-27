@@ -19,7 +19,7 @@ router.get('/overview', async (_req, res) => {
   const [active, pending, sources, ai] = await Promise.all([User.countDocuments({ status: 'active' }), User.countDocuments({ status: 'pending' }), Source.find().lean(), aiHealth()]);
   let queue = { running: false, jobsInQueue: 0 };
   try {
-    const c = await analysisQueue().getJobCounts('waiting', 'active', 'delayed');
+    const c = await Promise.race([analysisQueue().getJobCounts('waiting', 'active', 'delayed'), new Promise((_, reject) => setTimeout(() => reject(new Error('redis timeout')), 3000))]);
     queue = { running: true, jobsInQueue: c.waiting + c.active + c.delayed, ...c };
   } catch { /* Redis unreachable: reported as not running */ }
   res.json({
@@ -47,6 +47,14 @@ router.post('/users/:id/approve', async (req, res) => {
   if (!user) throw conflict('User not found or not pending');
   await audit({ actor: actorOf(req.user), action: 'user.approved', entityType: 'user', entityId: user._id, details: { role: user.role } });
   await notifyUser(user._id, { title: 'Your account is approved', body: 'You can now sign in to the Approval Validation Platform.' });
+  res.json(user.toPublic());
+});
+
+router.post('/users/:id/reject', async (req, res) => {
+  const user = await User.findOneAndUpdate({ _id: req.params.id, status: 'pending' }, { status: 'rejected' }, { new: true });
+  if (!user) throw conflict('User not found or not pending');
+  await audit({ actor: actorOf(req.user), action: 'user.rejected', entityType: 'user', entityId: user._id, details: { role: user.role } });
+  await notifyUser(user._id, { title: 'Your registration was not approved', body: 'An administrator declined this account request.' });
   res.json(user.toPublic());
 });
 

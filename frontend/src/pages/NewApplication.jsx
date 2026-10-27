@@ -78,8 +78,8 @@ export default function NewApplication() {
   }
 
   return (
-    <main style={{ maxWidth: 1100, padding: 32, margin: '0 auto' }}>
-      <header className="r" style={{ justifyContent: 'space-between' }}>
+    <main className="page" style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <header className="r page-head">
         <div><h1>New application</h1><p className="t">Complete the details and upload checklist documents.</p></div>
         <Link to="/college">Back to dashboard</Link>
       </header>
@@ -105,22 +105,22 @@ export default function NewApplication() {
           <section className="c" style={{ marginTop: 16 }}>
             <h2>Required documents</h2>
             <p className="t">{application.checklist.requiredUploaded} of {application.checklist.requiredTotal} required uploaded ({application.checklist.percent}%).</p>
-            {application.checklist.items.map((item) => <div key={item.key} className="r" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid #e2e8f0', padding: '12px 0' }}>
+            {application.checklist.items.map((item) => <div key={item.key} className="r row-wrap" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid #e2e8f0', padding: '12px 0' }}>
               <div><b>{item.label}</b><p className="t">{item.description || item.rule || ''} · {item.filename || 'Not uploaded'}</p></div>
               <label className="btn bo">Choose file<input type="file" hidden disabled={busy} onChange={(event) => { upload('documents', item.key, event.target.files?.[0]); event.target.value = ''; }} /></label>
             </div>)}
           </section>
           <section className="c" style={{ marginTop: 16 }}>
             <h2>Infrastructure evidence</h2>
-            {application.checklist.infrastructure.map((item) => <div key={item.key} className="r" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid #e2e8f0', padding: '12px 0' }}>
+            {application.checklist.infrastructure.map((item) => <div key={item.key} className="r row-wrap" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid #e2e8f0', padding: '12px 0' }}>
               <div><b>{item.label}</b><p className="t">{item.requirement} · {item.filename || 'Not uploaded'}</p></div>
               <label className="btn bo">Choose file<input type="file" hidden disabled={busy} accept="image/*,application/pdf" onChange={(event) => { upload('infrastructure', item.key, event.target.files?.[0]); event.target.value = ''; }} /></label>
             </div>)}
           </section>
         </>}
-        <div className="r" style={{ justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+        <div className="r row-wrap" style={{ justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
           <button type="button" disabled={busy} className="btn bo" onClick={saveDraft}>Save draft</button>
-          <button type="submit" disabled={busy}>{busy ? 'Working…' : 'Save and submit'}</button>
+          <button type="submit" className="btn" disabled={busy}>{busy ? 'Working…' : 'Save and submit'}</button>
         </div>
       </form>}
     </main>

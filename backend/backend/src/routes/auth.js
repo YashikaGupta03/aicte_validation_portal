@@ -42,6 +42,7 @@ router.post('/login', limiter, validate(loginSchema), async (req, res) => {
     throw unauthorized('Incorrect email or password');
   }
   if (user.status === 'pending') throw forbidden('Your account is waiting for administrator approval');
+  if (user.status === 'rejected') throw forbidden('Your registration was not approved by an administrator');
   if (user.status !== 'active') throw forbidden('This account is disabled');
   user.lastLoginAt = new Date();
   await user.save();

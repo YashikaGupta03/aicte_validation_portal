@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ['college', 'officer', 'admin'], required: true },
-    status: { type: String, enum: ['pending', 'active', 'disabled'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'active', 'disabled', 'rejected'], default: 'pending' },
     designation: { type: String, default: '' }, // e.g. "Scrutiny officer"
     lastLoginAt: Date,
   },
