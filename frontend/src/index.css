@@ -127,8 +127,7 @@ td:first-child{white-space:normal}
   table{font-size:12px}
   td,th{padding:9px 6px}
   /* landing page */
-  .land>div,.land>.hero>div{padding-left:20px!important;padding-right:20px!important}
-  .land-nav{padding:14px 20px!important;gap:12px;flex-wrap:wrap}
+    .land-nav{padding:14px 20px!important;gap:12px;flex-wrap:wrap}
   .land-links{display:none!important}
   .land-hero{flex-direction:column;padding:32px 20px 48px!important;gap:28px!important}
   .land-hero>div{width:100%;flex:none!important}
@@ -144,3 +143,15 @@ td:first-child{white-space:normal}
   .land-h1{font-size:34px!important}
   .land-nav .btn{padding:8px 12px!important;font-size:13px}
 }
+
+/* ---------- landing page: full-bleed hero, marquee, spacing ---------- */
+.land{--gx:max(48px,calc((100% - 1184px)/2));overflow-x:clip}
+.land-top{border-radius:0 0 28px 28px;margin-bottom:24px;overflow:hidden}
+.land-bottom{border-radius:24px;margin:24px 16px 20px}
+.marquee{border-top:1px solid #1e3a8a;padding:16px 0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.marquee-track{display:flex;width:max-content;animation:marquee-scroll 32s linear infinite;will-change:transform}
+.marquee:hover .marquee-track{animation-play-state:paused}
+.marquee-item{color:#cbd5e1;margin-right:48px;flex:none}
+@keyframes marquee-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.marquee-track{animation:none}}
+@media(max-width:760px){.land{--gx:20px}.land-bottom{margin:20px 10px 14px;border-radius:20px}.land-top{border-radius:0 0 20px 20px}}
