@@ -1,5 +1,4 @@
 # AICTE Approval Validation Platform: frontend
-# hi chirag 
 
 React + Vite frontend for the AICTE validation portal. Authentication and the college, officer,
 and administrator workflows communicate with the Node/Express API.

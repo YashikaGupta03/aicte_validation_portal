@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken } from '../api.js';
+
+const PALETTE = ['#1d4ed8', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2'];
+const count = (items, key) => Object.entries(items.reduce((acc, i) => ((acc[i[key]] = (acc[i[key]] || 0) + 1), acc), {})).map(([name, value]) => ({ name, value }));
 
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
@@ -53,6 +57,28 @@ export default function AdminDashboard() {
           <article className="c">Pending sign-ups <b>{overview.pendingSignups}</b></article>
           <article className="c">Jobs in queue <b>{overview.jobsInQueue}</b></article>
           <article className="c">Sources reachable <b>{overview.sourcesReachable.reachable}/{overview.sourcesReachable.total}</b></article>
+        </section>
+        <section className="g" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 16 }}>
+          <article className="c"><h3 style={{ fontSize: 14 }}>Users by role</h3>
+            <div style={{ height: 200 }}><ResponsiveContainer width="100%" height="100%">
+              <PieChart><Pie data={count(users, 'role')} dataKey="value" nameKey="name" outerRadius={70} label>
+                {count(users, 'role').map((d, i) => <Cell key={d.name} fill={PALETTE[i % PALETTE.length]} />)}
+              </Pie><Tooltip /><Legend /></PieChart>
+            </ResponsiveContainer></div></article>
+          <article className="c"><h3 style={{ fontSize: 14 }}>Users by status</h3>
+            <div style={{ height: 200 }}><ResponsiveContainer width="100%" height="100%">
+              <BarChart data={count(users, 'status')} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis allowDecimals={false} tick={{ fontSize: 11 }} /><Tooltip />
+                <Bar dataKey="value" name="Users" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer></div></article>
+          <article className="c"><h3 style={{ fontSize: 14 }}>Recent audit events by action</h3>
+            <div style={{ height: 200 }}><ResponsiveContainer width="100%" height="100%">
+              <BarChart data={count(audit, 'action')} layout="vertical" margin={{ top: 8, right: 8, left: 24, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10 }} /><Tooltip />
+                <Bar dataKey="value" name="Events" fill="#0891b2" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer></div></article>
         </section>
         <section className="c">
           <h2>Users</h2>

@@ -46,3 +46,13 @@ export async function api(path, { method = 'GET', body, file, ...options } = {})
   }
   return payload;
 }
+
+// Fetches a binary (e.g. an uploaded PDF/image) with the auth header. Returns a Blob.
+export async function apiBlob(path) {
+  const headers = new Headers();
+  const token = getToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  const response = await fetch(`${API_URL}${path}`, { headers });
+  if (!response.ok) throw new ApiError(`Could not load file (${response.status})`, response.status);
+  return response.blob();
+}
