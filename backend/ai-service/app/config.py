@@ -2,8 +2,12 @@ import os
 
 NODE_API_URL = os.getenv("NODE_API_URL", "http://localhost:4000").rstrip("/")
 SERVICE_TOKEN = os.getenv("SERVICE_TOKEN", "dev-service-token-change-me")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
+# Vision LLM provider: "gemini" (default) or "anthropic". Leave the key empty to run without an LLM.
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").strip().lower()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+LLM_MODEL = os.getenv("LLM_MODEL", "").strip()  # empty = provider default (see llm.py)
+LLM_TIMEOUT_S = float(os.getenv("LLM_TIMEOUT_S", "90"))
 OCR_ENGINE = os.getenv("OCR_ENGINE", "auto")  # auto | paddle | tesseract | none
 OCR_MIN_CONFIDENCE = float(os.getenv("OCR_MIN_CONFIDENCE", "0.5"))  # auto: below this mean confidence, retry with Tesseract
 # Only files and callbacks under these URL prefixes are fetched (the service token is sent with every call).
