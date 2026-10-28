@@ -4,6 +4,7 @@ from __future__ import annotations
 import io
 import logging
 import re
+import threading
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional
@@ -12,6 +13,11 @@ from dateutil import parser as dateparser
 from rapidfuzz import fuzz
 
 from .. import config
+
+try:  # PyMuPDF 1.24+ exposes "pymupdf"; older and some newer releases only "fitz"
+    import pymupdf as fitz
+except ImportError:  # pragma: no cover
+    import fitz  # type: ignore[no-redef]
 
 log = logging.getLogger("common")
 
@@ -42,8 +48,6 @@ class Page:
 # ---- rendering -----------------------------------------------------------------------------------------
 def render_pages(path: str, mime: str) -> list[Page]:
     if mime == "application/pdf":
-        import fitz  # PyMuPDF
-
         pages: list[Page] = []
         with fitz.open(path) as doc:
             for i in range(min(len(doc), config.MAX_PAGES_PER_DOC)):
@@ -119,15 +123,34 @@ def _ocr_tesseract(png: bytes) -> list[OcrLine]:
     return out
 
 
+_ocr_lock = threading.Lock()  # PaddleOCR is not thread-safe and FastAPI runs requests in a thread pool
+
+
+def _mean_conf(lines: list[OcrLine]) -> float:
+    return sum(l.conf for l in lines) / len(lines) if lines else 0.0
+
+
 def run_ocr(pages: list[Page]) -> str:
-    """Fills page.lines / ocr_text. Paddle first, Tesseract as backup, PDF text layer as last resort.
-    Returns the engine name that was actually used."""
-    order = {"paddle": ["paddle", "tesseract"], "tesseract": ["tesseract"], "none": []}.get(config.OCR_ENGINE, ["paddle", "tesseract"])
+    """Fills page.lines / ocr_text. Returns the engine that was actually used.
+
+    auto      -> Paddle per document; if it fails or its mean confidence is low, Tesseract is used instead
+    paddle    -> Paddle, Tesseract if Paddle raises
+    tesseract -> Tesseract only
+    none      -> skip OCR (PDF text layer only)
+    """
+    mode = config.OCR_ENGINE if config.OCR_ENGINE in ("auto", "paddle", "tesseract", "none") else "auto"
+    order = {"auto": ["paddle", "tesseract"], "paddle": ["paddle", "tesseract"], "tesseract": ["tesseract"], "none": []}[mode]
     for engine in order:
         try:
             fn = _ocr_paddle if engine == "paddle" else _ocr_tesseract
-            for p in pages:
-                lines = fn(p.png)
+            with _ocr_lock:
+                results = [fn(p.png) for p in pages]
+            if mode == "auto" and engine == "paddle":
+                all_lines = [l for r in results for l in r]
+                if _mean_conf(all_lines) < config.OCR_MIN_CONFIDENCE:
+                    log.warning("Paddle confidence %.2f is low; trying Tesseract", _mean_conf(all_lines))
+                    continue
+            for p, lines in zip(pages, results):
                 p.lines, p.ocr_text = lines, "\n".join(l.text for l in lines)
             return engine
         except Exception as exc:

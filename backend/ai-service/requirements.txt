@@ -1,18 +1,20 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-pydantic>=2.8
-httpx>=0.27
-rapidfuzz>=3.9
-python-dateutil>=2.9
-PyMuPDF>=1.24
-Pillow>=10.4
-numpy>=1.26
-opencv-python-headless>=4.10
-imagehash>=4.3
-pyzbar>=0.1.9
-pyhanko>=0.25
-paddleocr>=2.8
-paddlepaddle>=2.6
-pytesseract>=0.3.13
+# Versions pinned to the set that was installed during development (original freeze).
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+httpx==0.28.1
+rapidfuzz==3.14.6
+python-dateutil==3.0.0
+pymupdf==2.0
+pillow==13.0.0
+numpy==1.26.4
+# paddleocr pulls in both OpenCV builds; pin them to the same version so they cannot clash
+opencv-python==4.11.0.86
+opencv-contrib-python==4.11.0.86
+imagehash==4.3.2
+pyzbar==0.1.9
+pyHanko==0.25.3
+paddleocr==2.9.1
+paddlepaddle==2.6.2
+pytesseract==0.3.13
 anthropic>=0.40
-pytest>=8.0

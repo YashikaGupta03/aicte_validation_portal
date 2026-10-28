@@ -83,7 +83,8 @@ def check_signatures(path: str) -> dict[str, Any]:
                 out["present"] = True
                 try:
                     st = validate_pdf_signature(sig)  # no trust roots configured: integrity is checked, trust is not
-                    out["signatures"].append({"field": sig.field_name, "intact": bool(st.intact), "valid": bool(st.valid), "trusted": bool(st.trusted)})
+                    out["signatures"].append({"field": sig.field_name, "intact": bool(st.intact), "valid": bool(st.valid),
+                                              "trusted": bool(st.trusted), "docmdp_ok": st.docmdp_ok})
                 except Exception as exc:
                     out["signatures"].append({"field": sig.field_name, "intact": False, "valid": False, "trusted": False, "error": str(exc)[:120]})
     except Exception as exc:
@@ -111,7 +112,7 @@ def verify_document(ref: DocumentRef, path: str, pages: list[Page], ex: Optional
     def result(status: str, source: str) -> tuple[Verification, list[Flag]]:
         return Verification(doc_id=ref.id, document_key=ref.key, status=status, source=source, checked_at=_now(), details=details), flags  # type: ignore[arg-type]
 
-    if sig["present"] and any(not s["intact"] for s in sig["signatures"]):
+    if sig["present"] and any(not s["intact"] or not s["valid"] or s.get("docmdp_ok") is False for s in sig["signatures"]):
         details["reason"] = "A digital signature is present but the file was changed after signing"
         flags.append(make_flag("ai4", "signature_invalid", "high", f"{ref.filename}: digital signature does not validate. The file may have been changed after signing.", confidence=0.85, doc_id=ref.id, filename=ref.filename))
         return result("mismatch", "pdf_signature")

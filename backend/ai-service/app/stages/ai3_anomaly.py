@@ -14,7 +14,8 @@ from rapidfuzz import fuzz
 from ..flags import make_flag
 from ..node_client import find_duplicates
 from ..schemas import DocumentRef, ExtractedDocument, Flag
-from .common import Page, parse_date
+from .. import config
+from .common import Page, fitz, parse_date
 
 log = logging.getLogger("ai3")
 
@@ -40,13 +41,13 @@ def combine(signals: list[Signal]) -> float:
 
 
 # ---- signal 1: Error Level Analysis ---------------------------------------------------------------------
-def ela_signal(page: Page, quality: int = 90, block: int = 32) -> Optional[Signal]:
-    """Re-save as JPEG and look for blocks whose compression error stands out from the rest of the page.
-    Weak on its own (scans and photos are noisy), so it is only ever one input to the combined score."""
+def _ela_image(img, quality: int = 90, block: int = 32) -> Optional[tuple[float, list[float]]]:
+    """Re-save as JPEG and look for blocks whose compression error stands out from the rest of the picture.
+    Returns (score 0-1, bbox in the picture's own pixels) or None."""
     import numpy as np
     from PIL import Image
 
-    img = Image.open(io.BytesIO(page.png)).convert("RGB")
+    img = img.convert("RGB")
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=quality)
     buf.seek(0)
@@ -67,8 +68,59 @@ def ela_signal(page: Page, quality: int = 90, block: int = 32) -> Optional[Signa
         return None
     ys, xs = np.where(hot)
     bbox = [float(xs.min() * block), float(ys.min() * block), float((xs.max() + 1) * block), float((ys.max() + 1) * block)]
-    score = min(1.0, 0.3 + frac * 8)
-    return Signal("ela", score, "Possible edited region: compression error differs from the rest of the page", page.number, bbox)
+    return min(1.0, 0.3 + frac * 8), bbox
+
+
+ELA_REASON = "Possible edited region: compression error differs from the rest of the page"
+
+
+def ela_signal(page: Page) -> Optional[Signal]:
+    """ELA on the rendered page. Used for uploaded images; for PDFs see embedded_image_ela."""
+    from PIL import Image
+
+    found = _ela_image(Image.open(io.BytesIO(page.png)))
+    return Signal("ela", found[0], ELA_REASON, page.number, found[1]) if found else None
+
+
+def embedded_image_ela(path: str, pages: list[Page]) -> Optional[Signal]:
+    """ELA on the raster pictures embedded in a PDF (scans, pasted stamps, photos).
+
+    A rendered PDF page is lossless and full of crisp vector text, so ELA on the page itself is mostly
+    noise; the useful signal is in the embedded pictures. The box is mapped back onto the rendered
+    page image so the dashboard can highlight it. If a picture cannot be extracted, that page falls
+    back to ELA on its rendering."""
+    from PIL import Image
+
+    scale = config.RENDER_DPI / 72
+    best: Optional[Signal] = None
+    with fitz.open(path) as doc:
+        for p in pages:
+            if not p.has_raster or p.number > len(doc):
+                continue
+            page = doc[p.number - 1]
+            try:
+                for item in page.get_images(full=True):
+                    xref = item[0]
+                    with Image.open(io.BytesIO(doc.extract_image(xref)["image"])) as picture:
+                        picture.load()
+                        found = _ela_image(picture)
+                        width, height = picture.size
+                    rects = page.get_image_rects(xref)
+                    if not found or not rects:
+                        continue
+                    r = rects[0]
+                    sx, sy = r.width * scale / width, r.height * scale / height
+                    x1, y1, x2, y2 = found[1]
+                    bbox = [round(r.x0 * scale + x1 * sx, 1), round(r.y0 * scale + y1 * sy, 1),
+                            round(r.x0 * scale + x2 * sx, 1), round(r.y0 * scale + y2 * sy, 1)]
+                    if best is None or found[0] > best.score:
+                        best = Signal("ela", found[0], ELA_REASON, p.number, bbox)
+            except Exception as exc:
+                log.warning("embedded-image ELA failed on page %s, using the page rendering: %s", p.number, exc)
+                s = ela_signal(p)
+                if s and (best is None or s.score > best.score):
+                    best = s
+    return best
 
 
 # ---- signal 2: PDF / image metadata ---------------------------------------------------------------------
@@ -89,8 +141,6 @@ def metadata_signals(path: str, mime: str, issue_iso: Optional[str]) -> list[Sig
     created = modified = None
     try:
         if mime == "application/pdf":
-            import fitz
-
             with fitz.open(path) as doc:
                 md = doc.metadata or {}
             software = f"{md.get('producer', '')} {md.get('creator', '')}"
@@ -156,15 +206,15 @@ def run_anomaly(
             ex.phash = phash_hex(pgs[0])
         sigs = per_doc[doc_id]
 
-        for p in pgs:
-            if p.has_raster:
-                try:
-                    s = ela_signal(p)
-                    if s:
-                        sigs.append(s)
-                        break  # one ELA finding per document is enough
-                except Exception as exc:
-                    log.warning("ELA failed for %s: %s", ref.filename, exc)
+        try:
+            if ref.mime == "application/pdf":
+                s = embedded_image_ela(paths[doc_id], pgs)  # one ELA finding per document is enough
+            else:
+                s = ela_signal(pgs[0])
+            if s:
+                sigs.append(s)
+        except Exception as exc:
+            log.warning("ELA failed for %s: %s", ref.filename, exc)
         sigs += metadata_signals(paths[doc_id], ref.mime, ex.get("issue_date").value if ex and ex.get("issue_date") else None)
         tl = text_layer_signal(pgs)
         if tl:

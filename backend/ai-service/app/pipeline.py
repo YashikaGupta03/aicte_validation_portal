@@ -56,6 +56,10 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 if ref.kind == "checklist":
                     engine = run_ocr(pgs)
                     extracted[doc_id] = ai1_extract.extract(ref, pgs, engine, labels.get(ref.key, ref.key))
+                else:
+                    # no fields to read, but AI 3 needs a record to attach the pHash to, so a reused
+                    # photo can be matched against other applications
+                    extracted[doc_id] = ExtractedDocument(doc_id=ref.id, doc_key=ref.key, doc_type="infrastructure_photo", ocr_engine="none", page_count=len(pgs))
 
         _guard("read documents", "ai1", flags, step1, None)
         progress(1, "read documents")

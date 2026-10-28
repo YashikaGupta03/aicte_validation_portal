@@ -16,8 +16,16 @@ log = logging.getLogger("node_client")
 HEADERS = {"x-service-token": config.SERVICE_TOKEN}
 
 
+def _allowed(url: Optional[str]) -> bool:
+    """The service token is sent with every request, so only URLs under the Node API are fetched."""
+    prefixes = config.ALLOWED_URL_PREFIXES or [config.NODE_API_URL]
+    return bool(url) and any(url == p or url.startswith(p + "/") for p in prefixes)
+
+
 def download(doc: DocumentRef, dest_dir: str) -> str:
     """Download one file; verify its sha256 against what Node stored, so we analyse exactly what was uploaded."""
+    if not _allowed(doc.download_url):
+        raise ValueError(f"download URL for {doc.filename} is not under an allowed address")
     path = os.path.join(dest_dir, doc.id + (".pdf" if doc.mime == "application/pdf" else ".img"))
     h = hashlib.sha256()
     limit = config.MAX_DOWNLOAD_MB * 1024 * 1024
@@ -37,7 +45,7 @@ def download(doc: DocumentRef, dest_dir: str) -> str:
 
 
 def report_progress(url: Optional[str], run: int, done: int, total: int, stage: str) -> None:
-    if not url:
+    if not url or not _allowed(url):
         return
     try:
         httpx.post(url, json={"run": run, "done": done, "total": total, "stage": stage}, headers=HEADERS, timeout=5)

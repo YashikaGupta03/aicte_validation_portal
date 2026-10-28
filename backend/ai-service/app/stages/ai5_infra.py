@@ -2,6 +2,7 @@
 Advisory only: the result is ok / needs_more_evidence / needs_inspection, never a pass or fail."""
 from __future__ import annotations
 
+import io
 import logging
 
 from .. import llm
@@ -19,9 +20,38 @@ SYSTEM = (
     "Counts of objects (for example workstations) must be stated as what you can actually count."
 )
 LOW_CONFIDENCE = 0.6
+MIN_SHARPNESS = 60.0     # variance of the Laplacian; below this the photo is probably blurry
+MIN_BRIGHTNESS, MAX_BRIGHTNESS = 45.0, 230.0
+
+
+def photo_quality_problems(png: bytes, is_plan: bool = False) -> list[str]:
+    """Cheap heuristics, advisory only. Floor plans are mostly white line drawings, so the
+    brightness test is skipped for them."""
+    import numpy as np
+    from PIL import Image
+
+    gray = np.asarray(Image.open(io.BytesIO(png)).convert("L"), dtype=np.float32)
+    problems: list[str] = []
+    lap = gray[1:-1, 1:-1] * 4 - gray[:-2, 1:-1] - gray[2:, 1:-1] - gray[1:-1, :-2] - gray[1:-1, 2:]
+    if float(lap.var()) < MIN_SHARPNESS:
+        problems.append("looks blurry or out of focus")
+    if not is_plan:
+        mean = float(gray.mean())
+        if mean < MIN_BRIGHTNESS:
+            problems.append("is too dark")
+        elif mean > MAX_BRIGHTNESS:
+            problems.append("is overexposed")
+    return problems
 
 
 def assess(ref: DocumentRef, page: Page, req: InfraRequirement) -> InfraOutcome:
+    try:
+        problems = photo_quality_problems(page.png, is_plan="plan" in req.key.lower() or "plan" in req.label.lower())
+    except Exception as exc:
+        log.warning("photo quality check failed for %s: %s", ref.filename, exc)
+        problems = []
+    if problems:  # no point asking the model to judge an unusable photo
+        return InfraOutcome(doc_id=ref.id, requirement_key=req.key, requirement=req.requirement, visible="Photo quality problem: the image " + " and ".join(problems) + ". Please upload a clearer photo.", result="needs_more_evidence", confidence=0.0)
     if not llm.available():
         return InfraOutcome(doc_id=ref.id, requirement_key=req.key, requirement=req.requirement, visible="Vision model not configured; no automated assessment was made.", result="needs_more_evidence", confidence=0.0)
     try:
