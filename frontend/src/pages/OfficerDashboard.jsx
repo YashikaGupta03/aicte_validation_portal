@@ -117,6 +117,14 @@ export default function OfficerDashboard() {
           <div><h2>{report.application.code} — {report.application.form.institutionName}</h2><p>{report.application.stageLabel} · {report.application.category}</p></div>
           <button className="btn bo" onClick={() => setReport(null)}>Close</button>
         </div>
+                {report.application.status === 'ai_failed' && <div role="alert" className="wn" style={{ margin: '12px 0' }}>
+          <b>Automated checks failed.</b> {report.application.analysisError || 'No error message was recorded.'}
+        </div>}
+        {['ai_failed', 'ready_for_review', 'under_review'].includes(report.application.status) && <div style={{ margin: '12px 0' }}>
+          <button disabled={busy} className="btn bo" onClick={() => { if (window.confirm('Run the automated checks again? Flags from the previous run will be replaced.')) act(`/api/officer/applications/${report.application.id}/reanalyze`, {}); }}>
+            {busy ? 'Working…' : 'Re-analyse'}
+          </button>
+        </div>}
         <h3>Documents and verification</h3>
         {report.documents.map((doc) => {
           const vers = report.verifications.filter((v) => v.document === doc.id);
